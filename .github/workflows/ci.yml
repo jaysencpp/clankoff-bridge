@@ -1,0 +1,47 @@
+# Checks every push and pull request: the files parse, each entry point in package.json loads, the CLI starts, and the
+# package packs. It installs nothing (the package has no dependencies) and has no secrets; a pull request from a fork
+# runs it with a read-only token. release.yml runs the same checks before it sends anything to npm.
+#
+# Actions are pinned to a commit; Dependabot (.github/dependabot.yml) proposes the updates.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Every file parses
+        run: for f in src/*.js; do node --check "$f"; done
+      - name: Every entry point loads
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const pkg = JSON.parse(readFileSync("package.json", "utf8"));
+            for (const key of Object.keys(pkg.exports)) {
+              const name = key === "." ? pkg.name : pkg.name + key.slice(1);
+              await import(name);
+              console.log("ok", name);
+            }'
+      - name: The CLI starts
+        run: |
+          test "$(node src/cli.js --version)" = "$(node -p 'require("./package.json").version')"
+          node src/cli.js --help
+      - name: The package packs
+        run: npm pack --dry-run

@@ -1,0 +1,84 @@
+# A pushed tag v<version> sends that version to npm, then makes the GitHub release.
+#
+# No npm token is stored anywhere. npm trusts this file, in this repository, in the "npm" environment (trusted
+# publishing over OpenID Connect), and only to *stage* a version: it reaches users after a maintainer approves it
+# with two-factor authentication (`npm stage approve <id>`, or on npmjs.com). Set up once with:
+#   npm trust github clankoff-bridge --repo jaysencpp/clankoff-bridge --file release.yml --env npm --allow-stage-publish
+#
+# The "npm" environment only accepts v* tags, and those tags can't be moved or deleted (repository rulesets).
+# Renaming this file or the environment breaks the trust: run `npm trust` again if you do.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions: {}
+
+# one release at a time, never cut off part-way
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  check:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+
+  npm:
+    needs: check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/clankoff-bridge
+    permissions:
+      contents: read
+      id-token: write # the OpenID Connect token npm checks; this job has no other credential
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # the history, to check the tag is on main
+          persist-credentials: false
+      - name: The tag is this version, on main
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME, but package.json says $version"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$GITHUB_REF_NAME is not a commit on main"
+            exit 1
+          fi
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      # `npm stage` needs a newer npm than Node ships with
+      - run: npm install --global npm@12.1.0
+      - name: Stage on npm
+        run: |
+          npm stage publish --provenance
+          {
+            echo "### $GITHUB_REF_NAME is staged on npm"
+            echo "It is not public yet. Approve it with two-factor authentication:"
+            echo '```'
+            echo "npm stage list clankoff-bridge"
+            echo "npm stage approve <stage-id>"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  github-release:
+    needs: npm
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write # to make the release
+    steps:
+      - name: Make the GitHub release, unless the tag came from one
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes
