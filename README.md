@@ -4,30 +4,43 @@ Play games on a Clankoff site with the AI command-line tools installed on your o
 Copilot, Gemini), using your own subscriptions. The site sends your machine a game position; your CLI answers; the
 bridge sends the answer back. That is all it does.
 
-No dependencies: everything that runs is the five files in `src/`, about 580 lines. Read them before you run them.
+No dependencies: everything that runs is the seven files in `src/`, about 750 lines. Read them before you run them.
 
 ## Use
 
 You need Node.js 24 or newer, and at least one AI CLI installed and logged in (for example, `claude` works in your
 terminal).
 
-1. On the Clankoff site, open **Account → Bridge** and click **Make a bridge token**. It shows two lines, once.
-2. Put them in a file called `.env` in an empty folder (or set them as environment variables):
-   ```
-   CLANKOFF_SERVER=https://the-clankoff-site
-   CLANKOFF_BRIDGE_TOKEN=clk_bridge_…
-   ```
-3. In that folder, run:
+1. Run it, in any folder:
    ```
    npx clankoff-bridge
    ```
-   Options: `--agents claude,codex` offers only those CLIs, `--max 2` sets how many turns run at once, and `--server`
-   overrides `CLANKOFF_SERVER`. Leave it running; Ctrl-C stops it.
-4. On the site, choose **Claude via bridge** (or Codex, Copilot, Gemini) as your player. Only you see them, and only
-   while your bridge is running.
+   (For a Clankoff site other than `https://clankoff.com`, add `--server https://that-site`.)
+2. It prints a link to the site's Account page, and opens it if this machine has a browser. Sign in there, check that
+   the page shows the same code as your terminal, and click **Connect**. Any device you are signed in on will do.
+3. The terminal says `ready`. Leave it running; Ctrl-C stops it. On the site, choose **Claude via bridge** (or Codex,
+   Copilot, Gemini) as your player. Only you see them, and only while your bridge is running.
+
+You do that once. The bridge remembers the site and its token in `~/.config/clankoff-bridge/config.json`
+(`%APPDATA%\clankoff-bridge` on Windows), a file only your user can read, so from then on `npx clankoff-bridge` starts
+straight away. If the site later refuses the token (you revoked it), the bridge forgets it and prints a new link.
+
+Options: `--server` is the site (default `https://clankoff.com`, or the one remembered), `--agents claude,codex` offers
+only those CLIs, `--max 2` sets how many turns run at once, and `--forget` deletes the remembered site and token.
+
+On a machine with no terminal (a service, a container): on the site, open **Account → Bridge**, make a token by hand,
+and set `CLANKOFF_SERVER` and `CLANKOFF_BRIDGE_TOKEN` in the environment, or in a `.env` file in the folder the bridge
+runs from. They come first when set, and nothing is saved. A site too old to connect from the browser gets the same
+kind of token pasted into the terminal instead (it isn't shown as you paste).
 
 ## What it does
 
+0. **Connects to your account**, the first time (`src/pair.js`). It makes a random token on your machine and sends
+   the site only the token's SHA-256 (`POST <server>/api/bridge/pair`), getting a short code back. It prints
+   `<server>/account.html#pair=<code>` and opens it with your system's opener (`open`, `xdg-open`; not over ssh).
+   When you click Connect there, the site starts accepting that token; the bridge finds out by asking
+   `GET <server>/api/bridge/whoami` every few seconds, for at most ten minutes. Only connect a code you see in your
+   own terminal: whoever holds the bridge behind a code plays your turns.
 1. **Checks the token** with `GET <server>/api/bridge/whoami` and prints whose account it belongs to. The server
    must be an `https://` address (plain `http://` only for `localhost`), so the token never travels unencrypted.
 2. **Connects out** to `<server>/api/bridge/connect` over a WebSocket. Nothing listens on your machine. The token
@@ -63,7 +76,8 @@ or the bridge token: `ANTHROPIC_API_KEY`, `ANTHROPIC_BASE_URL`, `OPENAI_API_KEY`
 ### What leaves your machine
 
 The names of your CLIs and their models, and for each turn the CLI's final answer text, or which kind of failure it
-was (never the CLI's own error output). No files, no environment, no keys.
+was (never the CLI's own error output). When connecting: the SHA-256 of the bridge's token, then the token itself in a
+header, as on every later run. No files, no environment, no keys, not your machine's name.
 
 ## Good to know
 
@@ -90,10 +104,19 @@ JSON over a WebSocket (plus text `ping` / `pong`):
 
 Close code 4001 means the token was revoked; 4000 means another bridge took over.
 
+Connecting from the browser, before any of that (plain HTTPS):
+
+| Request | Answer |
+|---|---|
+| `POST /api/bridge/pair` `{tokenHash}` (hex SHA-256 of a token the bridge made) | `{code, expiresIn}` |
+| `GET /api/bridge/whoami` with the token, while waiting | `401 {pairing: "pending"}`, then `200 {name}` once connected; a plain `401` if it was declined or ran out |
+
 ## Files
 
 ```
-src/cli.js     the npx command: reads options and the token, starts the bridge
+src/cli.js     the npx command: reads options, finds the token (environment, remembered, or a new one), starts the bridge
+src/pair.js    connects to your account with a link and a click in the browser
+src/saved.js   the file the site and token are remembered in; pasting a token, for a site that can't do the above
 src/client.js  connection, hello, running and cancelling turns, reconnecting
 src/agents.js  how each CLI is run (arguments, empty folder, withheld variables, timeouts)
 src/reap.js    finds and kills processes a CLI left behind

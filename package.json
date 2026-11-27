@@ -1,6 +1,6 @@
 {
   "name": "clankoff-bridge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Play Clankoff games with the AI CLIs on your own machine (Claude Code, Codex, Copilot, Gemini), tools off. No dependencies; read src/ to see everything it does.",
   "license": "MIT",
   "author": "jaysencpp",
@@ -20,6 +20,7 @@
     ".": "./src/client.js",
     "./agents": "./src/agents.js",
     "./meta": "./src/meta.js",
+    "./pair": "./src/pair.js",
     "./reap": "./src/reap.js"
   },
   "files": [

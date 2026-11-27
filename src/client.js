@@ -144,7 +144,7 @@ export function startBridge({ server, token, agents, log = (line) => console.log
   // Check the token over plain HTTP first: a refused WebSocket gives no reason.
   fetch(`${base}/api/bridge/whoami`, { headers: { Authorization: `Bearer ${token}` } })
     .then(async (r) => {
-      if (r.status === 401) throw new Error('the server doesn\'t know this bridge token (revoked, or for another site?)');
+      if (r.status === 401) throw Object.assign(new Error('the server doesn\'t know this bridge token (revoked, or for another site?)'), { code: 'bad-token' });
       if (!r.ok) throw new Error(`the server answered ${r.status}`);
       log(`bridge token belongs to ${(await r.json()).name}`);
       connect();
