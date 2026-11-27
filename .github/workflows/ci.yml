@@ -1,6 +1,7 @@
-# Checks every push and pull request: the files parse, each entry point in package.json loads, the CLI starts, and the
-# package packs. It installs nothing (the package has no dependencies) and has no secrets; a pull request from a fork
-# runs it with a read-only token. release.yml runs the same checks before it sends anything to npm.
+# Checks every push and pull request: the files parse, each entry point in package.json loads, the CLI starts, the
+# tests pass (test/, with Node's own runner: no real CLI is started, and the only site they talk to is a stand-in on
+# 127.0.0.1) and the package packs. It installs nothing (the package has no dependencies) and has no secrets; a pull
+# request from a fork runs it with a read-only token. release.yml runs the same checks before it sends anything to npm.
 #
 # Actions are pinned to a commit; Dependabot (.github/dependabot.yml) proposes the updates.
 name: CI
@@ -43,5 +44,7 @@ jobs:
         run: |
           test "$(node src/cli.js --version)" = "$(node -p 'require("./package.json").version')"
           node src/cli.js --help
+      - name: The tests pass
+        run: npm test
       - name: The package packs
         run: npm pack --dry-run
