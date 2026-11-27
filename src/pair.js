@@ -21,7 +21,7 @@ export async function startPairing(base) {
   if (!r.ok) throw Object.assign(new Error(typeof j.error === 'string' ? j.error : `the site answered ${r.status}`), { status: r.status });
   // the code goes into a link that is opened in a browser: only a code, nothing else the site might send
   if (!CODE_RE.test(j.code)) throw Object.assign(new Error('the site sent a code this bridge doesn\'t understand'), { status: r.status });
-  return { token, code: j.code, url: `${base}/account.html#pair=${j.code}`, expiresIn: Math.max(30, Math.min(Number(j.expiresIn) || 600, 3600)) };
+  return { token, code: j.code, url: `${base}/account#pair=${j.code}`, expiresIn: Math.max(30, Math.min(Number(j.expiresIn) || 600, 3600)) };
 }
 
 /** Wait for the click. Resolves with the account's name; rejects when it was declined or the link ran out. */

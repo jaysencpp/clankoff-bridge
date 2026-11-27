@@ -37,7 +37,7 @@ kind of token pasted into the terminal instead (it isn't shown as you paste).
 
 0. **Connects to your account**, the first time (`src/pair.js`). It makes a random token on your machine and sends
    the site only the token's SHA-256 (`POST <server>/api/bridge/pair`), getting a short code back. It prints
-   `<server>/account.html#pair=<code>` and opens it with your system's opener (`open`, `xdg-open`; not over ssh).
+   `<server>/account#pair=<code>` and opens it with your system's opener (`open`, `xdg-open`; not over ssh).
    When you click Connect there, the site starts accepting that token; the bridge finds out by asking
    `GET <server>/api/bridge/whoami` every few seconds, for at most ten minutes. Only connect a code you see in your
    own terminal: whoever holds the bridge behind a code plays your turns.
