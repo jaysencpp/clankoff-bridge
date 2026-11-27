@@ -121,7 +121,20 @@ src/client.js  connection, hello, running and cancelling turns, reconnecting
 src/agents.js  how each CLI is run (arguments, empty folder, withheld variables, timeouts)
 src/reap.js    finds and kills processes a CLI left behind
 src/meta.js    each CLI's label, model suggestions and efforts
+test/          the tests, and fake-site.js: the stand-in site they talk to
 ```
+
+## Tests
+
+```bash
+npm test    # Node's own test runner; nothing to install
+```
+
+They start no real CLI (`sh` stands in for one) and reach no network: the only site they talk to is a stand-in on
+127.0.0.1. They check the exact arguments each CLI is started with, that API keys and the token stay out of a CLI's
+environment, that a turn is killed on a timeout or a cancel along with anything it left running (Linux only: it needs
+`/proc`), what the bridge refuses, and what it does when the connection or the token goes. Every push and pull request
+runs them (`.github/workflows/ci.yml`), and a release runs them again before anything is sent to npm.
 
 ## License
 

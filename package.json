@@ -13,6 +13,9 @@
     "url": "https://github.com/jaysencpp/clankoff-bridge/issues"
   },
   "type": "module",
+  "scripts": {
+    "test": "node --test --test-timeout=60000 \"test/*.test.js\""
+  },
   "bin": {
     "clankoff-bridge": "src/cli.js"
   },
