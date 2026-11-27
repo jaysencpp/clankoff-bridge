@@ -81,7 +81,7 @@ test('Gemini: every tool denied by an admin policy, and again by the top setting
 
 test('a CLI\'s environment has no API keys and no bridge token', () => {
   const vars = ['ANTHROPIC_API_KEY', 'ANTHROPIC_BASE_URL', 'OPENAI_API_KEY', 'OPENAI_BASE_URL', 'GEMINI_API_KEY', 'GOOGLE_API_KEY',
-    'OPENROUTER_API_KEY', 'CLANKOFF_BRIDGE_TOKEN'];
+    'OPENROUTER_API_KEY', 'META_API_KEY', 'MODEL_API_KEY', 'CLANKOFF_BRIDGE_TOKEN'];
   for (const v of vars) assert.ok(WITHHELD_VARS.has(v), `${v} is withheld`);
   const before = { ...process.env };
   try {

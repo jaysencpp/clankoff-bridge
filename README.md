@@ -70,8 +70,8 @@ kind of token pasted into the terminal instead (it isn't shown as you paste).
 
 The CLI runs with your environment **minus** these variables, so it uses its own login and never sees your API keys
 or the bridge token: `ANTHROPIC_API_KEY`, `ANTHROPIC_BASE_URL`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `GEMINI_API_KEY`,
-`GOOGLE_API_KEY`, `GEMINI_BASE_URL`, `OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL`, `TYPESAFE_API_KEY`,
-`TYPESAFE_BASE_URL`, `CLANKOFF_BRIDGE_TOKEN`.
+`GOOGLE_API_KEY`, `GEMINI_BASE_URL`, `OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL`, `META_API_KEY`, `MODEL_API_KEY`, `META_BASE_URL`,
+`TYPESAFE_API_KEY`, `TYPESAFE_BASE_URL`, `CLANKOFF_BRIDGE_TOKEN`.
 
 ### What leaves your machine
 

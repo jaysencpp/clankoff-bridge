@@ -13,7 +13,8 @@ import { CLI_META } from './meta.js';
 // the bridge's own token, which a CLI has no use for.
 export const WITHHELD_VARS = new Set([
   'ANTHROPIC_API_KEY', 'ANTHROPIC_BASE_URL', 'OPENAI_API_KEY', 'OPENAI_BASE_URL', 'GEMINI_API_KEY', 'GOOGLE_API_KEY',
-  'GEMINI_BASE_URL', 'OPENROUTER_API_KEY', 'OPENROUTER_BASE_URL', 'TYPESAFE_API_KEY', 'TYPESAFE_BASE_URL', 'CLANKOFF_BRIDGE_TOKEN',
+  'GEMINI_BASE_URL', 'OPENROUTER_API_KEY', 'OPENROUTER_BASE_URL', 'META_API_KEY', 'MODEL_API_KEY', 'META_BASE_URL', 'TYPESAFE_API_KEY',
+  'TYPESAFE_BASE_URL', 'CLANKOFF_BRIDGE_TOKEN',
 ]);
 /** The environment a CLI runs with: this process's, minus WITHHELD_VARS, plus `extra`. */
 export function cliEnv(extra = {}) {
